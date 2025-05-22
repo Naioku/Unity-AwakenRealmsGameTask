@@ -6,7 +6,7 @@ public class Managers : MonoBehaviour
         
     private void Awake()
     {
-        if (Instance == null)
+        if (!Instance)
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
