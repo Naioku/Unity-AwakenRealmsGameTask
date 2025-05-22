@@ -31,6 +31,12 @@ namespace Dice
                 Debug.LogError("No mesh collider set.");
                 return;
             }
+
+            if (!meshCollider.sharedMesh)
+            {
+                Debug.LogError("Mesh is not set in the collider.");
+                return;
+            }
         
             if (!sidePrefab)
             {
@@ -47,6 +53,7 @@ namespace Dice
             }
 
             GenerateNewMarkers(sides);
+            EditorUtility.SetDirty(this);
 
             Debug.Log($"{sides.Count} markers generated.");
         }
