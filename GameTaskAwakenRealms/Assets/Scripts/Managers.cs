@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using InputSystemExtension;
+using UnityEngine;
 using UpdateSystem;
 
 public class Managers : MonoBehaviour
@@ -6,6 +7,7 @@ public class Managers : MonoBehaviour
     public static Managers Instance { get; private set; }
     
     public IUpdateRegistrar UpdateRegistrar => _updateManager;
+    public InputManager InputManager { get; private set; }
     
     private UpdateManager _updateManager;
         
@@ -22,6 +24,9 @@ public class Managers : MonoBehaviour
         }
         
         _updateManager = new UpdateManager();
+        InputManager = new InputManager();
+
+        InputManager.Awake();
     }
 
     private void Update() => _updateManager.Update();
