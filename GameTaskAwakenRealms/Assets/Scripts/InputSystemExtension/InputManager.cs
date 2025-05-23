@@ -5,7 +5,7 @@ using UnityEngine.InputSystem;
 
 namespace InputSystemExtension
 {
-    public class InputManager
+    public class InputManager : IInputManager
     {
         private readonly Controls _controls = new();
         private readonly List<ActionMap> _mapsList = new();
@@ -18,7 +18,6 @@ namespace InputSystemExtension
             Managers.Instance.UpdateRegistrar.RegisterOnUpdate(UpdateCursorPosition);
             InitializeMaps();
             BuildMapsList();
-            
         }
 
         public void Destroy()

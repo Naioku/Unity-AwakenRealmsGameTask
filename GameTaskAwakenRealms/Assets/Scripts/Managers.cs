@@ -1,16 +1,19 @@
 ﻿using InputSystemExtension;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UpdateSystem;
 
 public class Managers : MonoBehaviour
 {
-    public static Managers Instance { get; private set; }
-    
-    public IUpdateRegistrar UpdateRegistrar => _updateManager;
-    public InputManager InputManager { get; private set; }
+    [SerializeField] private GameManager gameManager;
     
     private UpdateManager _updateManager;
-        
+    private InputManager _inputManager;
+    
+    public static Managers Instance { get; private set; }
+    public IUpdateRegistrar UpdateRegistrar => _updateManager;
+    public IInputManager InputManager => _inputManager;
+    
     private void Awake()
     {
         if (!Instance)
@@ -24,9 +27,19 @@ public class Managers : MonoBehaviour
         }
         
         _updateManager = new UpdateManager();
-        InputManager = new InputManager();
+        _inputManager = new InputManager();
 
-        InputManager.Awake();
+        _inputManager.Awake();
+    }
+
+    // Todo: Added only for easy testing.
+    //  Eventually it should be invoked after signal of the game's start is received from the UI.
+    private void Start() => gameManager.StartGame();
+
+    private void OnDestroy()
+    {
+        gameManager.Destroy();
+        _inputManager.Destroy();
     }
 
     private void Update() => _updateManager.Update();
