@@ -7,23 +7,26 @@ using UnityEditor;
 
 namespace Dice
 {
+    [RequireComponent(typeof(MeshCollider))]
+    [RequireComponent(typeof(MeshRenderer))]
     public class Die : MonoBehaviour
     {
         private const float AngleDegreesTolerance = 1f;
     
-        [SerializeField] private MeshCollider meshCollider;
         [SerializeField] private string sideMarkersParentName = "Side markers";
         [SerializeField, HideInInspector] private Transform sideMarkersParent;
         [SerializeField] private GameObject sidePrefab;
         [SerializeField] private List<SideData> sidesData;
         [SerializeField] private Interaction interaction;
 
+        private MeshCollider _meshCollider;
         private MeshRenderer _meshRenderer;
         private Color _meshColorBase;
         private Color _meshColorHighlight;
         
         private void Awake()
         {
+            _meshCollider = GetComponent<MeshCollider>();
             _meshRenderer = GetComponent<MeshRenderer>();
             _meshColorBase = _meshRenderer.material.color;
             _meshColorHighlight = _meshColorBase + new Color(0.1f, 0.1f, 0.1f, 1f);
@@ -72,13 +75,13 @@ namespace Dice
         [ContextMenu("Generate side markers")]
         private void CMGenerateSideMarkers()
         {
-            if (!meshCollider)
+            if (!_meshCollider)
             {
                 Debug.LogError("No mesh collider set.");
                 return;
             }
 
-            if (!meshCollider.sharedMesh)
+            if (!_meshCollider.sharedMesh)
             {
                 Debug.LogError("Mesh is not set in the collider.");
                 return;
@@ -90,7 +93,7 @@ namespace Dice
                 return;
             }
 
-            List<Triangle> triangleData = CreateTriangleData(meshCollider.sharedMesh);
+            List<Triangle> triangleData = CreateTriangleData(_meshCollider.sharedMesh);
             List<List<Triangle>> sides = CreateSides(triangleData);
         
             if (sideMarkersParent)
