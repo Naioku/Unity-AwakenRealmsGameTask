@@ -10,7 +10,7 @@ namespace InputSystemExtension
         private readonly Controls _controls = new();
         private readonly List<ActionMap> _mapsList = new();
         
-        public GlobalMap GlobalMap { get; private set; }
+        public GameplayMap GameplayMap { get; private set; }
         public Vector2 CursorPosition { get; private set; }
         
         public void Awake()
@@ -37,12 +37,12 @@ namespace InputSystemExtension
 
         private void InitializeMaps()
         {
-            GlobalMap = new GlobalMap(_controls.Global);
+            GameplayMap = new GameplayMap(_controls.Gameplay);
         }
 
         private void BuildMapsList()
         {
-            _mapsList.Add(GlobalMap);
+            _mapsList.Add(GameplayMap);
         }
     }
 }

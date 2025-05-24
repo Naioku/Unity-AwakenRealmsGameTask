@@ -2,13 +2,13 @@
 
 namespace InputSystemExtension.ActionMaps
 {
-    public class GlobalMap : ActionMap, Controls.IGlobalActions
+    public class GameplayMap : ActionMap, Controls.IGameplayActions
     {
         public IActionRegistrar OnClickInteractionData => _onClickInteractionData;
         
         private readonly ActionData _onClickInteractionData;
         
-        public GlobalMap(Controls.GlobalActions actionMap)
+        public GameplayMap(Controls.GameplayActions actionMap)
         {
             this.actionMap = actionMap.Get();
             actionMap.SetCallbacks(this);

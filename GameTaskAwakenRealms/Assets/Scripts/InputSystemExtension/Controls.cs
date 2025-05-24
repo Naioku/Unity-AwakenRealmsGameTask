@@ -26,7 +26,7 @@ namespace InputSystemExtension
     ""name"": ""Controls"",
     ""maps"": [
         {
-            ""name"": ""Global"",
+            ""name"": ""Gameplay"",
             ""id"": ""5ac2e82e-b234-4ea9-96ea-d54d6ae868a8"",
             ""actions"": [
                 {
@@ -73,9 +73,9 @@ namespace InputSystemExtension
         }
     ]
 }");
-            // Global
-            m_Global = asset.FindActionMap("Global", throwIfNotFound: true);
-            m_Global_LClickInteraction = m_Global.FindAction("LClickInteraction", throwIfNotFound: true);
+            // Gameplay
+            m_Gameplay = asset.FindActionMap("Gameplay", throwIfNotFound: true);
+            m_Gameplay_LClickInteraction = m_Gameplay.FindAction("LClickInteraction", throwIfNotFound: true);
         }
 
         public void Dispose()
@@ -134,51 +134,51 @@ namespace InputSystemExtension
             return asset.FindBinding(bindingMask, out action);
         }
 
-        // Global
-        private readonly InputActionMap m_Global;
-        private List<IGlobalActions> m_GlobalActionsCallbackInterfaces = new List<IGlobalActions>();
-        private readonly InputAction m_Global_LClickInteraction;
-        public struct GlobalActions
+        // Gameplay
+        private readonly InputActionMap m_Gameplay;
+        private List<IGameplayActions> m_GameplayActionsCallbackInterfaces = new List<IGameplayActions>();
+        private readonly InputAction m_Gameplay_LClickInteraction;
+        public struct GameplayActions
         {
             private @Controls m_Wrapper;
-            public GlobalActions(@Controls wrapper) { m_Wrapper = wrapper; }
-            public InputAction @LClickInteraction => m_Wrapper.m_Global_LClickInteraction;
-            public InputActionMap Get() { return m_Wrapper.m_Global; }
+            public GameplayActions(@Controls wrapper) { m_Wrapper = wrapper; }
+            public InputAction @LClickInteraction => m_Wrapper.m_Gameplay_LClickInteraction;
+            public InputActionMap Get() { return m_Wrapper.m_Gameplay; }
             public void Enable() { Get().Enable(); }
             public void Disable() { Get().Disable(); }
             public bool enabled => Get().enabled;
-            public static implicit operator InputActionMap(GlobalActions set) { return set.Get(); }
-            public void AddCallbacks(IGlobalActions instance)
+            public static implicit operator InputActionMap(GameplayActions set) { return set.Get(); }
+            public void AddCallbacks(IGameplayActions instance)
             {
-                if (instance == null || m_Wrapper.m_GlobalActionsCallbackInterfaces.Contains(instance)) return;
-                m_Wrapper.m_GlobalActionsCallbackInterfaces.Add(instance);
+                if (instance == null || m_Wrapper.m_GameplayActionsCallbackInterfaces.Contains(instance)) return;
+                m_Wrapper.m_GameplayActionsCallbackInterfaces.Add(instance);
                 @LClickInteraction.started += instance.OnLClickInteraction;
                 @LClickInteraction.performed += instance.OnLClickInteraction;
                 @LClickInteraction.canceled += instance.OnLClickInteraction;
             }
 
-            private void UnregisterCallbacks(IGlobalActions instance)
+            private void UnregisterCallbacks(IGameplayActions instance)
             {
                 @LClickInteraction.started -= instance.OnLClickInteraction;
                 @LClickInteraction.performed -= instance.OnLClickInteraction;
                 @LClickInteraction.canceled -= instance.OnLClickInteraction;
             }
 
-            public void RemoveCallbacks(IGlobalActions instance)
+            public void RemoveCallbacks(IGameplayActions instance)
             {
-                if (m_Wrapper.m_GlobalActionsCallbackInterfaces.Remove(instance))
+                if (m_Wrapper.m_GameplayActionsCallbackInterfaces.Remove(instance))
                     UnregisterCallbacks(instance);
             }
 
-            public void SetCallbacks(IGlobalActions instance)
+            public void SetCallbacks(IGameplayActions instance)
             {
-                foreach (var item in m_Wrapper.m_GlobalActionsCallbackInterfaces)
+                foreach (var item in m_Wrapper.m_GameplayActionsCallbackInterfaces)
                     UnregisterCallbacks(item);
-                m_Wrapper.m_GlobalActionsCallbackInterfaces.Clear();
+                m_Wrapper.m_GameplayActionsCallbackInterfaces.Clear();
                 AddCallbacks(instance);
             }
         }
-        public GlobalActions @Global => new GlobalActions(this);
+        public GameplayActions @Gameplay => new GameplayActions(this);
         private int m_KeyboardMouseSchemeIndex = -1;
         public InputControlScheme KeyboardMouseScheme
         {
@@ -188,7 +188,7 @@ namespace InputSystemExtension
                 return asset.controlSchemes[m_KeyboardMouseSchemeIndex];
             }
         }
-        public interface IGlobalActions
+        public interface IGameplayActions
         {
             void OnLClickInteraction(InputAction.CallbackContext context);
         }

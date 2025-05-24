@@ -10,7 +10,7 @@ public class GameManager
     {
         interactionController.Initialize(Camera.main);
         interactionController.StartInteracting();
-        Managers.Instance.InputManager.GlobalMap.Enable();
+        Managers.Instance.InputManager.GameplayMap.Enable();
     }
 
     public void Destroy()

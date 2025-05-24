@@ -5,7 +5,7 @@ namespace InputSystemExtension
 {
     public interface IInputManager
     {
-        public GlobalMap GlobalMap { get; }
+        public GameplayMap GameplayMap { get; }
         public Vector2 CursorPosition { get; }
         public void DisableAllMaps();
     }

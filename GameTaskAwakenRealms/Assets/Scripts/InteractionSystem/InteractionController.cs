@@ -44,14 +44,14 @@ namespace InteractionSystem
 
         private void AddInput()
         {
-            IActionRegistrar onClickInteractionData = Managers.Instance.InputManager.GlobalMap.OnClickInteractionData;
+            IActionRegistrar onClickInteractionData = Managers.Instance.InputManager.GameplayMap.OnClickInteractionData;
             onClickInteractionData.Performed += StartClickInteraction;
             onClickInteractionData.Canceled += StopClickInteraction;
         }
         
         private void RemoveInput()
         {
-            IActionRegistrar onClickInteractionData = Managers.Instance.InputManager.GlobalMap.OnClickInteractionData;
+            IActionRegistrar onClickInteractionData = Managers.Instance.InputManager.GameplayMap.OnClickInteractionData;
             onClickInteractionData.Performed -= StartClickInteraction;
             onClickInteractionData.Canceled -= StopClickInteraction;
         }
