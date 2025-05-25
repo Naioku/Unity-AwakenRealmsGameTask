@@ -105,6 +105,10 @@ MonoBehaviour:
     type: 3}
   sidesData: []
   interaction: {fileID: 3535193341157055350}
+  minRollingVelocity: 0.01
+  groundLayer:
+    serializedVersion: 2
+    m_Bits: 128
 --- !u!54 &3073958244162570038
 Rigidbody:
   m_ObjectHideFlags: 0

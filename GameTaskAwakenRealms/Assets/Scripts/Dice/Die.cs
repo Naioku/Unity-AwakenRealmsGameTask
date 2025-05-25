@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using InteractionSystem;
 using UnityEngine;
@@ -20,24 +21,24 @@ namespace Dice
         [SerializeField] private List<SideData> sidesData;
         [SerializeField] private Interaction interaction;
         [SerializeField] private float minRollingVelocity = 0.1f;
+        [SerializeField] private LayerMask groundLayer = 1 << 7;
 
         private MeshCollider _meshCollider;
         private Rigidbody _rigidbody;
         private MeshRenderer _meshRenderer;
         private Color _meshColorBase;
         private Color _meshColorHighlight;
+        
+        private float _cacheDraggingObjectMass;
+        private float _cacheDraggingObjectDrag;
+        private float _cacheDraggingObjectAngularDrag;
+        
+        private State _currentState;
+        private bool _isGrounded;
 
         Rigidbody IDraggable.Rigidbody => _rigidbody;
-        public void Drag() => interaction.Enabled = false;
-        public void Drop() => Managers.Instance.UpdateRegistrar.RegisterOnFixedUpdate(TryEnableInteraction);
-
-        private void TryEnableInteraction()
-        {
-            if (_rigidbody.velocity.magnitude > minRollingVelocity) return;
-            
-            interaction.Enabled = true;
-            Managers.Instance.UpdateRegistrar.UnregisterFromFixedUpdate(TryEnableInteraction);
-        }
+        public void Drag() => SwitchState(State.Drag);
+        public void Drop() => SwitchState(State.Roll);
 
         private void Awake()
         {
@@ -47,7 +48,27 @@ namespace Dice
             _meshColorBase = _meshRenderer.material.color;
             _meshColorHighlight = _meshColorBase + new Color(0.1f, 0.1f, 0.1f, 1f);
             
+            _cacheDraggingObjectMass = _rigidbody.mass;
+            _cacheDraggingObjectDrag = _rigidbody.drag;
+            _cacheDraggingObjectAngularDrag = _rigidbody.angularDrag;
+            
             InitInteraction();
+        }
+
+        private void Start() => SwitchState(State.PutDown);
+
+        private void OnCollisionEnter(Collision other)
+        {
+            if (groundLayer.value != 1 << other.gameObject.layer) return;
+            
+            _isGrounded = true;
+        }
+
+        private void OnCollisionExit(Collision other)
+        {
+            if (groundLayer.value != 1 << other.gameObject.layer) return;
+
+            _isGrounded = false;
         }
 
         private void InitInteraction()
@@ -68,6 +89,64 @@ namespace Dice
         private void HandleHoverEnter(InteractionDataArgs obj) => _meshRenderer.material.color = _meshColorHighlight;
         private void HandleHoverExit(InteractionDataArgs obj) => _meshRenderer.material.color = _meshColorBase;
 
+        private void SwitchState(State newState)
+        {
+            switch (newState)
+            {
+                case State.Idle:
+                    Debug.Log("Idle");
+                    _rigidbody.isKinematic = true;
+                    interaction.Enabled = true;
+                    break;
+                
+                case State.Drag:
+                    Debug.Log("Drag");
+                    interaction.Enabled = false;
+                    _rigidbody.isKinematic = false;
+                    _rigidbody.mass = 0.1f;
+                    _rigidbody.drag = 100f;
+                    _rigidbody.angularDrag = 200f;
+                    break;
+                
+                case State.Roll:
+                    Debug.Log("Roll");
+                    _rigidbody.mass = _cacheDraggingObjectMass;
+                    _rigidbody.drag = _cacheDraggingObjectDrag;
+                    _rigidbody.angularDrag = _cacheDraggingObjectAngularDrag;
+                    Managers.Instance.UpdateRegistrar.RegisterOnFixedUpdate(TrySwitchStateToIdle);
+                    break;
+                
+                case State.PutDown:
+                    Debug.Log("Put down");
+                    _rigidbody.velocity = Vector3.zero;
+                    _rigidbody.mass = _cacheDraggingObjectMass;
+                    _rigidbody.drag = _cacheDraggingObjectDrag;
+                    _rigidbody.angularDrag = _cacheDraggingObjectAngularDrag;
+                    Managers.Instance.UpdateRegistrar.RegisterOnFixedUpdate(TrySwitchStateToIdle);
+                    break;
+                
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(newState), newState, null);
+            }
+        }
+        
+        private void TrySwitchStateToIdle()
+        {
+            if (!_isGrounded) return;
+            if (_rigidbody.velocity.magnitude > minRollingVelocity) return;
+            
+            Managers.Instance.UpdateRegistrar.UnregisterFromFixedUpdate(TrySwitchStateToIdle);
+            SwitchState(State.Idle);
+        }
+
+        private enum State
+        {
+            Idle,
+            Drag,
+            Roll,
+            PutDown,
+        }
+        
 #if UNITY_EDITOR
         private void OnValidate()
         {

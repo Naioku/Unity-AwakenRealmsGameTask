@@ -469,6 +469,16 @@ PrefabInstance:
       propertyPath: m_Name
       value: DesktopMesh
       objectReference: {fileID: 0}
+    - target: {fileID: 884857902362713593, guid: a69d150d8ea5e0c46999c40618ac321b,
+        type: 3}
+      propertyPath: m_Layer
+      value: 7
+      objectReference: {fileID: 0}
+    - target: {fileID: 884857902362713593, guid: a69d150d8ea5e0c46999c40618ac321b,
+        type: 3}
+      propertyPath: m_TagString
+      value: Untagged
+      objectReference: {fileID: 0}
     - target: {fileID: 3632829809225081581, guid: a69d150d8ea5e0c46999c40618ac321b,
         type: 3}
       propertyPath: m_Material
