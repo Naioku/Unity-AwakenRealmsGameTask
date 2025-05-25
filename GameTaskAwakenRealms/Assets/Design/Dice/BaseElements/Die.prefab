@@ -99,16 +99,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b037c77b501dd9d4da1d81975814e135, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  interaction: {fileID: 3535193341157055350}
   sideMarkersParentName: Side markers
   sideMarkersParent: {fileID: 0}
   sidePrefab: {fileID: 5138497575101392091, guid: e2dab369755f60f4bad44a0dd1467bc3,
     type: 3}
   sidesData: []
-  interaction: {fileID: 3535193341157055350}
   minRollingVelocity: 0.01
   groundLayer:
     serializedVersion: 2
     m_Bits: 128
+  statesData:
+    drag:
+      mass: 0.1
+      drag: 100
+      angularDrag: 200
 --- !u!54 &3073958244162570038
 Rigidbody:
   m_ObjectHideFlags: 0

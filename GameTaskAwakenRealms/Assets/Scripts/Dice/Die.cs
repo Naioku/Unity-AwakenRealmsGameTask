@@ -15,13 +15,26 @@ namespace Dice
     {
         private const float AngleDegreesTolerance = 1f;
     
+        [SerializeField] private Interaction interaction;
+        
+        [Header("Markers")]
         [SerializeField] private string sideMarkersParentName = "Side markers";
         [SerializeField, HideInInspector] private Transform sideMarkersParent;
         [SerializeField] private GameObject sidePrefab;
         [SerializeField] private List<SideData> sidesData;
-        [SerializeField] private Interaction interaction;
+
+        [Header("Drag'n'throw")]
         [SerializeField] private float minRollingVelocity = 0.1f;
         [SerializeField] private LayerMask groundLayer = 1 << 7;
+        [SerializeField] private StatesData statesData = new()
+        {
+            drag = new Drag()
+            {
+                mass = 0.1f,
+                drag = 100f,
+                angularDrag = 200f
+            }
+        };
 
         private MeshCollider _meshCollider;
         private Rigidbody _rigidbody;
@@ -29,16 +42,16 @@ namespace Dice
         private Color _meshColorBase;
         private Color _meshColorHighlight;
         
-        private float _cacheDraggingObjectMass;
-        private float _cacheDraggingObjectDrag;
-        private float _cacheDraggingObjectAngularDrag;
+        private float _cacheMass;
+        private float _cacheDrag;
+        private float _cacheAngularDrag;
         
         private State _currentState;
         private bool _isGrounded;
 
         Rigidbody IDraggable.Rigidbody => _rigidbody;
         public void Drag() => SwitchState(State.Drag);
-        public void Drop() => SwitchState(State.Roll);
+        public void Drop() => SwitchState(State.Throw);
 
         private void Awake()
         {
@@ -48,9 +61,9 @@ namespace Dice
             _meshColorBase = _meshRenderer.material.color;
             _meshColorHighlight = _meshColorBase + new Color(0.1f, 0.1f, 0.1f, 1f);
             
-            _cacheDraggingObjectMass = _rigidbody.mass;
-            _cacheDraggingObjectDrag = _rigidbody.drag;
-            _cacheDraggingObjectAngularDrag = _rigidbody.angularDrag;
+            _cacheMass = _rigidbody.mass;
+            _cacheDrag = _rigidbody.drag;
+            _cacheAngularDrag = _rigidbody.angularDrag;
             
             InitInteraction();
         }
@@ -103,39 +116,42 @@ namespace Dice
                     Debug.Log("Drag");
                     interaction.Enabled = false;
                     _rigidbody.isKinematic = false;
-                    _rigidbody.mass = 0.1f;
-                    _rigidbody.drag = 100f;
-                    _rigidbody.angularDrag = 200f;
+                    _rigidbody.mass = statesData.drag.mass;
+                    _rigidbody.drag = statesData.drag.drag;
+                    _rigidbody.angularDrag = statesData.drag.angularDrag;
                     break;
                 
-                case State.Roll:
-                    Debug.Log("Roll");
-                    _rigidbody.mass = _cacheDraggingObjectMass;
-                    _rigidbody.drag = _cacheDraggingObjectDrag;
-                    _rigidbody.angularDrag = _cacheDraggingObjectAngularDrag;
-                    Managers.Instance.UpdateRegistrar.RegisterOnFixedUpdate(TrySwitchStateToIdle);
+                case State.Throw:
+                    Debug.Log("Throw");
+                    RestoreRigidbodySettings();
+                    Managers.Instance.UpdateRegistrar.RegisterOnFixedUpdate(TrySwitchingStateToIdle);
                     break;
                 
                 case State.PutDown:
                     Debug.Log("Put down");
                     _rigidbody.velocity = Vector3.zero;
-                    _rigidbody.mass = _cacheDraggingObjectMass;
-                    _rigidbody.drag = _cacheDraggingObjectDrag;
-                    _rigidbody.angularDrag = _cacheDraggingObjectAngularDrag;
-                    Managers.Instance.UpdateRegistrar.RegisterOnFixedUpdate(TrySwitchStateToIdle);
+                    RestoreRigidbodySettings();
+                    Managers.Instance.UpdateRegistrar.RegisterOnFixedUpdate(TrySwitchingStateToIdle);
                     break;
                 
                 default:
                     throw new ArgumentOutOfRangeException(nameof(newState), newState, null);
             }
         }
-        
-        private void TrySwitchStateToIdle()
+
+        private void RestoreRigidbodySettings()
+        {
+            _rigidbody.mass = _cacheMass;
+            _rigidbody.drag = _cacheDrag;
+            _rigidbody.angularDrag = _cacheAngularDrag;
+        }
+
+        private void TrySwitchingStateToIdle()
         {
             if (!_isGrounded) return;
             if (_rigidbody.velocity.magnitude > minRollingVelocity) return;
             
-            Managers.Instance.UpdateRegistrar.UnregisterFromFixedUpdate(TrySwitchStateToIdle);
+            Managers.Instance.UpdateRegistrar.UnregisterFromFixedUpdate(TrySwitchingStateToIdle);
             SwitchState(State.Idle);
         }
 
@@ -143,7 +159,7 @@ namespace Dice
         {
             Idle,
             Drag,
-            Roll,
+            Throw,
             PutDown,
         }
         
