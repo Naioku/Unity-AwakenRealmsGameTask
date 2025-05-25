@@ -25,6 +25,7 @@ namespace Dice
 
         [Header("Drag'n'throw")]
         [SerializeField] private float minRollingVelocity = 0.1f;
+        [SerializeField] private float minThrowVelocity = 10f;
         [SerializeField] private LayerMask groundLayer = 1 << 7;
         [SerializeField] private StatesData statesData = new()
         {
@@ -51,7 +52,7 @@ namespace Dice
 
         Rigidbody IDraggable.Rigidbody => _rigidbody;
         public void Drag() => SwitchState(State.Drag);
-        public void Drop() => SwitchState(State.Throw);
+        public void Drop() => SwitchState(_rigidbody.velocity.magnitude > minThrowVelocity ? State.Throw : State.PutDown);
 
         private void Awake()
         {

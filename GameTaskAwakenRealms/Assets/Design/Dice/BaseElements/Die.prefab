@@ -106,6 +106,7 @@ MonoBehaviour:
     type: 3}
   sidesData: []
   minRollingVelocity: 0.01
+  minThrowVelocity: 20
   groundLayer:
     serializedVersion: 2
     m_Bits: 128
