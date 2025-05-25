@@ -5,11 +5,30 @@ using UnityEngine;
 namespace InteractionSystem
 {
     [RequireComponent(typeof(BoxCollider))]
-    public class Interaction : MonoBehaviour, IInteractionInvoker
+    public class Interaction : InteractionInvoker
     {
         private readonly Dictionary<Enums.InteractionType, Dictionary<Enums.InteractionState, Action<InteractionDataArgs>>> _interactionTypeLookup = new();
 
+        public MonoBehaviour Owner { private get; set; }
+
         private void Awake() => InitializeActions();
+        
+        public void SetAction(
+            Enums.InteractionType interactionType,
+            Enums.InteractionState interactionState,
+            Action<InteractionDataArgs> action)
+            => _interactionTypeLookup[interactionType][interactionState] = action;
+
+        public override MonoBehaviour Interact(InteractionDataSystem interactionDataSystem, InteractionDataArgs interactionDataArgs)
+        {
+            if (!_interactionTypeLookup.TryGetValue(
+                    interactionDataSystem.InteractionType,
+                    out var actions)) return null;
+            if (!actions.ContainsKey(interactionDataSystem.InteractionState)) return null;
+            
+            actions[interactionDataSystem.InteractionState]?.Invoke(interactionDataArgs);
+            return Owner;
+        }
 
         private void InitializeActions()
         {
@@ -26,22 +45,6 @@ namespace InteractionSystem
                 
                 _interactionTypeLookup.Add(actionType, initialActions);
             }
-        }
-    
-        public void SetAction(
-            Enums.InteractionType interactionType,
-            Enums.InteractionState interactionState,
-            Action<InteractionDataArgs> action)
-            => _interactionTypeLookup[interactionType][interactionState] = action;
-
-        public void Interact(InteractionDataSystem interactionDataSystem, InteractionDataArgs interactionDataArgs)
-        {
-            if (!_interactionTypeLookup.TryGetValue(
-                    interactionDataSystem.InteractionType,
-                    out var actions)) return;
-            if (!actions.ContainsKey(interactionDataSystem.InteractionState)) return;
-            
-            actions[interactionDataSystem.InteractionState]?.Invoke(interactionDataArgs);
         }
     }
 }

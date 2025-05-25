@@ -8,8 +8,9 @@ using UnityEditor;
 namespace Dice
 {
     [RequireComponent(typeof(MeshCollider))]
+    [RequireComponent(typeof(Rigidbody))]
     [RequireComponent(typeof(MeshRenderer))]
-    public class Die : MonoBehaviour
+    public class Die : MonoBehaviour, IDraggable
     {
         private const float AngleDegreesTolerance = 1f;
     
@@ -20,13 +21,17 @@ namespace Dice
         [SerializeField] private Interaction interaction;
 
         private MeshCollider _meshCollider;
+        private Rigidbody _rigidbody;
         private MeshRenderer _meshRenderer;
         private Color _meshColorBase;
         private Color _meshColorHighlight;
-        
+
+        Rigidbody IDraggable.Rigidbody => _rigidbody;
+
         private void Awake()
         {
             _meshCollider = GetComponent<MeshCollider>();
+            _rigidbody = GetComponent<Rigidbody>();
             _meshRenderer = GetComponent<MeshRenderer>();
             _meshColorBase = _meshRenderer.material.color;
             _meshColorHighlight = _meshColorBase + new Color(0.1f, 0.1f, 0.1f, 1f);
@@ -42,28 +47,15 @@ namespace Dice
                 return;
             }
 
+            interaction.Owner = this;
             interaction.SetAction(Enums.InteractionType.Hover, Enums.InteractionState.EnterInteraction, HandleHoverEnter);
             interaction.SetAction(Enums.InteractionType.Hover, Enums.InteractionState.EnterType, HandleHoverEnter);
             interaction.SetAction(Enums.InteractionType.Hover, Enums.InteractionState.ExitInteraction, HandleHoverExit);
             interaction.SetAction(Enums.InteractionType.Hover, Enums.InteractionState.ExitType, HandleHoverExit);
-            
-            interaction.SetAction(Enums.InteractionType.Click, Enums.InteractionState.EnterType, HandleClickEnter);
-            interaction.SetAction(Enums.InteractionType.Click, Enums.InteractionState.ExitType, HandleClickExit);
-            interaction.SetAction(Enums.InteractionType.Click, Enums.InteractionState.ExitInteraction, HandleClickExit);
         }
 
         private void HandleHoverEnter(InteractionDataArgs obj) => _meshRenderer.material.color = _meshColorHighlight;
         private void HandleHoverExit(InteractionDataArgs obj) => _meshRenderer.material.color = _meshColorBase;
-
-        private void HandleClickEnter(InteractionDataArgs obj)
-        {
-            Debug.Log("ClickEnter");
-        }
-
-        private void HandleClickExit(InteractionDataArgs obj)
-        {
-            Debug.Log("ClickExit");
-        }
 
 #if UNITY_EDITOR
         private void OnValidate()
