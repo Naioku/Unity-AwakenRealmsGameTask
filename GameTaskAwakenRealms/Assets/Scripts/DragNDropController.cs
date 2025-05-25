@@ -23,7 +23,20 @@ public class DragNDropController
         _draggingHandleSpringJoint = _draggingHandle.GetComponent<SpringJoint>();
         _draggingHandle.gameObject.SetActive(false);
     }
-    
+
+    public void Destroy()
+    {
+        if (_isDragging)
+        {
+            Managers.Instance.UpdateRegistrar.UnregisterFromUpdate(MoveDraggedObject);
+        }
+        
+        if (_draggingHandle)
+        {
+            Object.Destroy(_draggingHandle.gameObject);
+        }
+    }
+
     public void Drag(IDraggable draggedObject)
     {
         _draggingHandle.gameObject.SetActive(true);
@@ -40,7 +53,7 @@ public class DragNDropController
         
         Managers.Instance.UpdateRegistrar.UnregisterFromUpdate(MoveDraggedObject);
         _draggingHandleSpringJoint.connectedBody = null;
-        _draggingObject.Drop();
+        _draggingObject.Drop(HandleScoreCalculated);
         _draggingObject = null;
         _draggingHandle.gameObject.SetActive(false);
         _isDragging = false;
@@ -54,16 +67,8 @@ public class DragNDropController
         _draggingHandle.position = ray.GetPoint(distance);
     }
 
-    public void Destroy()
+    private void HandleScoreCalculated(string score)
     {
-        if (_isDragging)
-        {
-            Managers.Instance.UpdateRegistrar.UnregisterFromUpdate(MoveDraggedObject);
-        }
-        
-        if (_draggingHandle)
-        {
-            Object.Destroy(_draggingHandle.gameObject);
-        }
+        Debug.Log(score);
     }
 }

@@ -115,6 +115,12 @@ MonoBehaviour:
       mass: 0.1
       drag: 100
       angularDrag: 200
+    autoThrow:
+      minVerticalDirection: 0.4
+      throwForce: 100
+      torqueForce: 50
+    scoreCalculation:
+      minDotProductPassing: 0.95
 --- !u!54 &3073958244162570038
 Rigidbody:
   m_ObjectHideFlags: 0

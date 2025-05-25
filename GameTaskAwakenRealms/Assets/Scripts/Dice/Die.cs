@@ -1,7 +1,9 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using InteractionSystem;
 using UnityEngine;
+using Random = UnityEngine.Random;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -29,11 +31,21 @@ namespace Dice
         [SerializeField] private LayerMask groundLayer = 1 << 7;
         [SerializeField] private StatesData statesData = new()
         {
-            drag = new Drag()
+            drag = new Drag
             {
                 mass = 0.1f,
                 drag = 100f,
-                angularDrag = 200f
+                angularDrag = 200f,
+            },
+            autoThrow = new AutoThrow
+            {
+                minVerticalDirection = 0.4f,
+                throwForce = 100,
+                torqueForce = 50f,
+            },
+            scoreDetection = new ScoreDetection
+            {
+                minDotProductPassing = 0.9f,
             }
         };
 
@@ -48,11 +60,20 @@ namespace Dice
         private float _cacheAngularDrag;
         
         private State _currentState;
-        private bool _isGrounded;
+        private Action<string> _onScoreCalculated;
 
-        Rigidbody IDraggable.Rigidbody => _rigidbody;
+        public Rigidbody Rigidbody => _rigidbody;
         public void Drag() => SwitchState(State.Drag);
-        public void Drop() => SwitchState(_rigidbody.velocity.magnitude > minThrowVelocity ? State.Throw : State.PutDown);
+        public void Drop(Action<string> onScoreCalculated)
+        {
+            _onScoreCalculated = onScoreCalculated;
+            SwitchState(_rigidbody.velocity.magnitude > minThrowVelocity ? State.Throw : State.PutDown);
+        }
+
+        [ContextMenu("Perform auto throw")]
+        public void PerformAutoThrow() => SwitchState(State.AutoThrow);
+        
+        private bool IsGrounded => Physics.Raycast(transform.position, Vector3.down, _meshCollider.bounds.extents.y + 0.1f, groundLayer);
 
         private void Awake()
         {
@@ -70,20 +91,6 @@ namespace Dice
         }
 
         private void Start() => SwitchState(State.PutDown);
-
-        private void OnCollisionEnter(Collision other)
-        {
-            if (groundLayer.value != 1 << other.gameObject.layer) return;
-            
-            _isGrounded = true;
-        }
-
-        private void OnCollisionExit(Collision other)
-        {
-            if (groundLayer.value != 1 << other.gameObject.layer) return;
-
-            _isGrounded = false;
-        }
 
         private void InitInteraction()
         {
@@ -122,21 +129,78 @@ namespace Dice
                     _rigidbody.angularDrag = statesData.drag.angularDrag;
                     break;
                 
+                case State.AutoThrow:
+                    Debug.Log("Auto throw");
+                    interaction.Enabled = false;
+                    _rigidbody.isKinematic = false;
+                    
+                    var randomForce = new Vector3(
+                        Random.Range(-1f, 1f),
+                        Random.Range(statesData.autoThrow.minVerticalDirection, 1f),
+                        Random.Range(-1f, 1f)).normalized;
+                    
+                    var randomTorque = new Vector3(
+                        Random.Range(-1f, 1f),
+                        Random.Range(-1f, 1f),
+                        Random.Range(-1f, 1f)).normalized;
+                    
+                    _rigidbody.AddForce(randomForce * statesData.autoThrow.throwForce, ForceMode.Impulse);
+                    _rigidbody.AddTorque(randomTorque * statesData.autoThrow.torqueForce, ForceMode.Impulse);
+                    RunDelayedAction(() => SwitchState(State.Throw), 0.5f);
+                    break;
+                
                 case State.Throw:
                     Debug.Log("Throw");
                     RestoreRigidbodySettings();
-                    Managers.Instance.UpdateRegistrar.RegisterOnFixedUpdate(TrySwitchingStateToIdle);
+                    Managers.Instance.UpdateRegistrar.RegisterOnFixedUpdate(TrySwitchingStateToScoreDetection);
                     break;
                 
                 case State.PutDown:
                     Debug.Log("Put down");
+                    interaction.Enabled = false;
                     _rigidbody.velocity = Vector3.zero;
                     RestoreRigidbodySettings();
                     Managers.Instance.UpdateRegistrar.RegisterOnFixedUpdate(TrySwitchingStateToIdle);
                     break;
                 
+                case State.ScoreDetection:
+                    Debug.Log("Score calculation");
+                    SideData? result = null;
+                    foreach (SideData sideData in sidesData)
+                    {
+                        Debug.Log($"Dot {Vector3.Dot(sideData.ForwardVector,  Vector3.up)}");
+                        if (Vector3.Dot(sideData.ForwardVector, Vector3.up) > statesData.scoreDetection.minDotProductPassing)
+                        {
+                            result = sideData;
+                            break;
+                        }
+                    }
+                    
+                    if (result == null)
+                    {
+                        SwitchState(State.AutoThrow);
+                        break;
+                    }
+                    
+                    _onScoreCalculated.Invoke(result.Value.Number);
+                    _onScoreCalculated = null;
+                    SwitchState(State.Idle);
+                    break;
+                
                 default:
                     throw new ArgumentOutOfRangeException(nameof(newState), newState, null);
+            }
+        }
+
+        private void RunDelayedAction(Action action, float delay)
+        {
+            StartCoroutine(Run());
+            return;
+            
+            IEnumerator Run()
+            {
+                yield return new WaitForSeconds(delay);
+                action.Invoke();
             }
         }
 
@@ -147,9 +211,18 @@ namespace Dice
             _rigidbody.angularDrag = _cacheAngularDrag;
         }
 
+        private void TrySwitchingStateToScoreDetection()
+        {
+            if (!IsGrounded) return;
+            if (_rigidbody.velocity.magnitude > minRollingVelocity) return;
+            
+            Managers.Instance.UpdateRegistrar.UnregisterFromFixedUpdate(TrySwitchingStateToScoreDetection);
+            SwitchState(State.ScoreDetection);
+        }        
+        
         private void TrySwitchingStateToIdle()
         {
-            if (!_isGrounded) return;
+            if (!IsGrounded) return;
             if (_rigidbody.velocity.magnitude > minRollingVelocity) return;
             
             Managers.Instance.UpdateRegistrar.UnregisterFromFixedUpdate(TrySwitchingStateToIdle);
@@ -160,8 +233,10 @@ namespace Dice
         {
             Idle,
             Drag,
+            AutoThrow,
             Throw,
             PutDown,
+            ScoreDetection,
         }
         
 #if UNITY_EDITOR
@@ -318,6 +393,9 @@ namespace Dice
                 this.side = side;
                 this.number = number;
             }
+            
+            public Vector3 ForwardVector => side.transform.forward;
+            public string Number => number;
         
             public void Update() => side.Number = number;
         }
