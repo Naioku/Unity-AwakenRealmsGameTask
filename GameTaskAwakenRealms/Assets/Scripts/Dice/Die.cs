@@ -19,6 +19,7 @@ namespace Dice
         [SerializeField] private GameObject sidePrefab;
         [SerializeField] private List<SideData> sidesData;
         [SerializeField] private Interaction interaction;
+        [SerializeField] private float minRollingVelocity = 0.1f;
 
         private MeshCollider _meshCollider;
         private Rigidbody _rigidbody;
@@ -27,6 +28,16 @@ namespace Dice
         private Color _meshColorHighlight;
 
         Rigidbody IDraggable.Rigidbody => _rigidbody;
+        public void Drag() => interaction.Enabled = false;
+        public void Drop() => Managers.Instance.UpdateRegistrar.RegisterOnFixedUpdate(TryEnableInteraction);
+
+        private void TryEnableInteraction()
+        {
+            if (_rigidbody.velocity.magnitude > minRollingVelocity) return;
+            
+            interaction.Enabled = true;
+            Managers.Instance.UpdateRegistrar.UnregisterFromFixedUpdate(TryEnableInteraction);
+        }
 
         private void Awake()
         {

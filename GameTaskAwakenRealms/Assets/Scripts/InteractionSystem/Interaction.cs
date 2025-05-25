@@ -9,6 +9,7 @@ namespace InteractionSystem
     {
         private readonly Dictionary<Enums.InteractionType, Dictionary<Enums.InteractionState, Action<InteractionDataArgs>>> _interactionTypeLookup = new();
 
+        public bool Enabled { private get; set; } = true;
         public MonoBehaviour Owner { private get; set; }
 
         private void Awake() => InitializeActions();
@@ -21,6 +22,7 @@ namespace InteractionSystem
 
         public override MonoBehaviour Interact(InteractionDataSystem interactionDataSystem, InteractionDataArgs interactionDataArgs)
         {
+            if (!Enabled) return null;
             if (!_interactionTypeLookup.TryGetValue(
                     interactionDataSystem.InteractionType,
                     out var actions)) return null;

@@ -11,7 +11,7 @@ public class DragNDropController
     
     private Transform _draggingHandle;
     private SpringJoint _draggingHandleSpringJoint;
-    private Rigidbody _draggingObjectRigidbody;
+    private IDraggable _draggingObject;
     private float _cacheDraggingObjectMass;
     private float _cacheDraggingObjectDrag;
     private float _cacheDraggingObjectAngularDrag;
@@ -30,14 +30,15 @@ public class DragNDropController
     public void Drag(IDraggable draggedObject)
     {
         _draggingHandle.gameObject.SetActive(true);
-        _draggingObjectRigidbody = draggedObject.Rigidbody;
-        _cacheDraggingObjectMass = _draggingObjectRigidbody.mass;
-        _cacheDraggingObjectDrag = _draggingObjectRigidbody.drag;
-        _cacheDraggingObjectAngularDrag = _draggingObjectRigidbody.angularDrag;
-        _draggingObjectRigidbody.mass = 0.1f;
-        _draggingObjectRigidbody.drag = 100f;
-        _draggingObjectRigidbody.angularDrag = 200f;
-        _draggingHandleSpringJoint.connectedBody = _draggingObjectRigidbody;
+        _draggingObject = draggedObject;
+        _draggingObject.Drag();
+        _cacheDraggingObjectMass = _draggingObject.Rigidbody.mass;
+        _cacheDraggingObjectDrag = _draggingObject.Rigidbody.drag;
+        _cacheDraggingObjectAngularDrag = _draggingObject.Rigidbody.angularDrag;
+        _draggingObject.Rigidbody.mass = 0.1f;
+        _draggingObject.Rigidbody.drag = 100f;
+        _draggingObject.Rigidbody.angularDrag = 200f;
+        _draggingHandleSpringJoint.connectedBody = _draggingObject.Rigidbody;
         Managers.Instance.UpdateRegistrar.RegisterOnUpdate(MoveDraggedObject);
         _isDragging = true;
     }
@@ -48,10 +49,11 @@ public class DragNDropController
         
         Managers.Instance.UpdateRegistrar.UnregisterFromUpdate(MoveDraggedObject);
         _draggingHandleSpringJoint.connectedBody = null;
-        _draggingObjectRigidbody.mass = _cacheDraggingObjectMass;
-        _draggingObjectRigidbody.drag = _cacheDraggingObjectDrag;
-        _draggingObjectRigidbody.angularDrag = _cacheDraggingObjectAngularDrag;
-        _draggingObjectRigidbody = null;
+        _draggingObject.Rigidbody.mass = _cacheDraggingObjectMass;
+        _draggingObject.Rigidbody.drag = _cacheDraggingObjectDrag;
+        _draggingObject.Rigidbody.angularDrag = _cacheDraggingObjectAngularDrag;
+        _draggingObject.Drop();
+        _draggingObject = null;
         _draggingHandle.gameObject.SetActive(false);
         _isDragging = false;
     }
