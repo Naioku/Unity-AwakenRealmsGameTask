@@ -117,7 +117,7 @@ MonoBehaviour:
       angularDrag: 200
     autoThrow:
       minVerticalDirection: 0.4
-      throwForce: 200
+      throwForce: 300
       torqueForce: 50
     scoreDetection:
       minDotProductPassing: 0.9
