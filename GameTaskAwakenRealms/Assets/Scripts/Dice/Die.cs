@@ -69,8 +69,7 @@ namespace Dice
             _onScoreCalculated = onScoreCalculated;
             SwitchState(_rigidbody.velocity.magnitude > minThrowVelocity ? State.Throw : State.PutDown);
         }
-
-        [ContextMenu("Perform auto throw")]
+        
         public void PerformAutoThrow() => SwitchState(State.AutoThrow);
         
         private bool IsGrounded => Physics.Raycast(transform.position, Vector3.down, _meshCollider.bounds.extents.y + 0.1f, groundLayer);
@@ -382,7 +381,7 @@ namespace Dice
             public Vector3 normal;
         }
     
-        [System.Serializable]
+        [Serializable]
         private struct SideData
         {
             [SerializeField] private Side side;
