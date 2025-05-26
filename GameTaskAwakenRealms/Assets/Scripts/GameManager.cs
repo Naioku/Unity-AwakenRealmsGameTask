@@ -7,7 +7,7 @@ public class GameManager
 {
     [SerializeField] private InteractionController interactionController;
     [SerializeField] private DragNDropController dragNDropController;
-    [SerializeField] private Die selectedDie;
+    [SerializeField] private DieController selectedDie;
     
     private int _scoreLast;
     private int _scoreTotal;

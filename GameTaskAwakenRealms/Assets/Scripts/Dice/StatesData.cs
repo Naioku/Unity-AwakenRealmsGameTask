@@ -5,6 +5,7 @@ namespace Dice
     [System.Serializable]
     public struct StatesData
     {
+        [Tooltip("Data used for Rigidbody when Die is in the Drag state.")]
         public Drag drag;
         public AutoThrow autoThrow;
         public ScoreDetection scoreDetection;

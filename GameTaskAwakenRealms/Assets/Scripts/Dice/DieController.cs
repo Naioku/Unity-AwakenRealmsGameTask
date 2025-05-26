@@ -13,7 +13,7 @@ namespace Dice
     [RequireComponent(typeof(MeshCollider))]
     [RequireComponent(typeof(Rigidbody))]
     [RequireComponent(typeof(MeshRenderer))]
-    public class Die : MonoBehaviour, IDraggable
+    public class DieController : MonoBehaviour, IDraggable
     {
         private const float AngleDegreesTolerance = 1f;
     
@@ -26,7 +26,9 @@ namespace Dice
         [SerializeField] private List<SideData> sidesData;
 
         [Header("Drag'n'throw")]
+        [Tooltip("Minimal velocity below which the Die is considered to be idle.")]
         [SerializeField] private float minRollingVelocity = 0.1f;
+        [Tooltip("Minimal velocity when the Die is considered to be in the throw state.")]
         [SerializeField] private float minThrowVelocity = 10f;
         [SerializeField] private LayerMask groundLayer = 1 << 7;
         [SerializeField] private StatesData statesData = new()
@@ -50,7 +52,6 @@ namespace Dice
         };
 
         private MeshCollider _meshCollider;
-        private Rigidbody _rigidbody;
         private MeshRenderer _meshRenderer;
         private Color _meshColorBase;
         private Color _meshColorHighlight;
@@ -64,13 +65,14 @@ namespace Dice
         public event Action<Enums.DieState> OnStateChanged;
         public event Action<int> OnScoreDetected;
 
-        public Rigidbody Rigidbody => _rigidbody;
+        public Rigidbody Rigidbody { get; private set; }
+
         public void Drag() => SwitchState(Enums.DieState.Drag);
-        public void Drop()
-        {
-            SwitchState(_rigidbody.velocity.magnitude > minThrowVelocity ? Enums.DieState.Throw : Enums.DieState.PutDown);
-        }
-        
+        public void Drop() => SwitchState(
+                Rigidbody.velocity.magnitude > minThrowVelocity 
+                    ? Enums.DieState.Throw 
+                    : Enums.DieState.PutDown);
+
         public void PerformAutoThrow()
         {
             if (_currentState != Enums.DieState.Idle) return;
@@ -83,14 +85,14 @@ namespace Dice
         private void Awake()
         {
             _meshCollider = GetComponent<MeshCollider>();
-            _rigidbody = GetComponent<Rigidbody>();
+            Rigidbody = GetComponent<Rigidbody>();
             _meshRenderer = GetComponent<MeshRenderer>();
             _meshColorBase = _meshRenderer.material.color;
             _meshColorHighlight = _meshColorBase + new Color(0.1f, 0.1f, 0.1f, 1f);
             
-            _cacheMass = _rigidbody.mass;
-            _cacheDrag = _rigidbody.drag;
-            _cacheAngularDrag = _rigidbody.angularDrag;
+            _cacheMass = Rigidbody.mass;
+            _cacheDrag = Rigidbody.drag;
+            _cacheAngularDrag = Rigidbody.angularDrag;
             
             InitInteraction();
         }
@@ -123,23 +125,23 @@ namespace Dice
             {
                 case Enums.DieState.Idle:
                     Debug.Log("Idle");
-                    _rigidbody.isKinematic = true;
+                    Rigidbody.isKinematic = true;
                     interaction.Enabled = true;
                     break;
                 
                 case Enums.DieState.Drag:
                     Debug.Log("Drag");
                     interaction.Enabled = false;
-                    _rigidbody.isKinematic = false;
-                    _rigidbody.mass = statesData.drag.mass;
-                    _rigidbody.drag = statesData.drag.drag;
-                    _rigidbody.angularDrag = statesData.drag.angularDrag;
+                    Rigidbody.isKinematic = false;
+                    Rigidbody.mass = statesData.drag.mass;
+                    Rigidbody.drag = statesData.drag.drag;
+                    Rigidbody.angularDrag = statesData.drag.angularDrag;
                     break;
                 
                 case Enums.DieState.AutoThrow:
                     Debug.Log("Auto throw");
                     interaction.Enabled = false;
-                    _rigidbody.isKinematic = false;
+                    Rigidbody.isKinematic = false;
                     
                     var randomForce = new Vector3(
                         Random.Range(-1f, 1f),
@@ -151,8 +153,8 @@ namespace Dice
                         Random.Range(-1f, 1f),
                         Random.Range(-1f, 1f)).normalized;
                     
-                    _rigidbody.AddForce(randomForce * statesData.autoThrow.throwForce, ForceMode.Impulse);
-                    _rigidbody.AddTorque(randomTorque * statesData.autoThrow.torqueForce, ForceMode.Impulse);
+                    Rigidbody.AddForce(randomForce * statesData.autoThrow.throwForce, ForceMode.Impulse);
+                    Rigidbody.AddTorque(randomTorque * statesData.autoThrow.torqueForce, ForceMode.Impulse);
                     RunDelayedAction(() => SwitchState(Enums.DieState.Throw), 0.5f);
                     break;
                 
@@ -165,7 +167,7 @@ namespace Dice
                 case Enums.DieState.PutDown:
                     Debug.Log("Put down");
                     interaction.Enabled = false;
-                    _rigidbody.velocity = Vector3.zero;
+                    Rigidbody.velocity = Vector3.zero;
                     RestoreRigidbodySettings();
                     Managers.Instance.UpdateRegistrar.RegisterOnFixedUpdate(TrySwitchingStateToIdle);
                     break;
@@ -175,7 +177,6 @@ namespace Dice
                     SideData? result = null;
                     foreach (SideData sideData in sidesData)
                     {
-                        Debug.Log($"Dot {Vector3.Dot(sideData.ForwardVector,  Vector3.up)}");
                         if (Vector3.Dot(sideData.ForwardVector, Vector3.up) > statesData.scoreDetection.minDotProductPassing)
                         {
                             result = sideData;
@@ -212,15 +213,15 @@ namespace Dice
 
         private void RestoreRigidbodySettings()
         {
-            _rigidbody.mass = _cacheMass;
-            _rigidbody.drag = _cacheDrag;
-            _rigidbody.angularDrag = _cacheAngularDrag;
+            Rigidbody.mass = _cacheMass;
+            Rigidbody.drag = _cacheDrag;
+            Rigidbody.angularDrag = _cacheAngularDrag;
         }
 
         private void TrySwitchingStateToScoreDetection()
         {
             if (!IsGrounded) return;
-            if (_rigidbody.velocity.magnitude > minRollingVelocity) return;
+            if (Rigidbody.velocity.magnitude > minRollingVelocity) return;
             
             Managers.Instance.UpdateRegistrar.UnregisterFromFixedUpdate(TrySwitchingStateToScoreDetection);
             SwitchState(Enums.DieState.ScoreDetection);
@@ -229,7 +230,7 @@ namespace Dice
         private void TrySwitchingStateToIdle()
         {
             if (!IsGrounded) return;
-            if (_rigidbody.velocity.magnitude > minRollingVelocity) return;
+            if (Rigidbody.velocity.magnitude > minRollingVelocity) return;
             
             Managers.Instance.UpdateRegistrar.UnregisterFromFixedUpdate(TrySwitchingStateToIdle);
             SwitchState(Enums.DieState.Idle);
