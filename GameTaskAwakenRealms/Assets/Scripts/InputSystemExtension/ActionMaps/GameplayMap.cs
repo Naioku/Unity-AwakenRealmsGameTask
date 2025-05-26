@@ -4,18 +4,18 @@ namespace InputSystemExtension.ActionMaps
 {
     public class GameplayMap : ActionMap, Controls.IGameplayActions
     {
-        public IActionRegistrar OnClickInteractionData => _onClickInteractionData;
+        public IActionRegistrar OnLClickInteractionData => _onLClickInteractionData;
         
-        private readonly ActionData _onClickInteractionData;
+        private readonly ActionData _onLClickInteractionData;
         
         public GameplayMap(Controls.GameplayActions actionMap)
         {
             this.actionMap = actionMap.Get();
             actionMap.SetCallbacks(this);
     
-            _onClickInteractionData = new ActionData(actionMap.LClickInteraction);
+            _onLClickInteractionData = new ActionData(actionMap.LClickInteraction);
         }
     
-        public void OnLClickInteraction(InputAction.CallbackContext context) => _onClickInteractionData.Invoke(context.phase);
+        public void OnLClickInteraction(InputAction.CallbackContext context) => _onLClickInteractionData.Invoke(context.phase);
     }
 }

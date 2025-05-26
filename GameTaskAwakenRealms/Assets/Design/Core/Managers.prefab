@@ -44,3 +44,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a6402ab52ce34f949097650f69f953db, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  gameManager:
+    interactionController:
+      interactionRange: 99
+      layerMask:
+        serializedVersion: 2
+        m_Bits: 64
+    dragNDropController:
+      draggingHeight: 2
+      draggingHandlePrefab: {fileID: 2789168492368036442, guid: 32637370ce0657044bf395584e2907ca,
+        type: 3}
+    draggingHeight: 2
+    draggingHandlePrefab: {fileID: 2789168492368036442, guid: 32637370ce0657044bf395584e2907ca,
+      type: 3}
