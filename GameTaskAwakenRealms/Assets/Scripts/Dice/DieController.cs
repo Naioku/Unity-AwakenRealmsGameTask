@@ -16,7 +16,7 @@ namespace Dice
     [RequireComponent(typeof(MeshRenderer))]
     public class DieController : MonoBehaviour, IDraggable
     {
-        private const float AngleDegreesTolerance = 1f;
+        private const float GenerateMarkersDotTolerance = 0.95f;
     
         [SerializeField] private Interaction interaction;
         
@@ -243,9 +243,17 @@ namespace Dice
             if (sidesData == null) return;
             UpdateSides();
         }
+        
+        private void UpdateSides()
+        {
+            foreach (SideData side in sidesData)
+            {
+                side.Update();
+            }
+        }
 
         [ContextMenu("Generate side markers")]
-        private void CMGenerateSideMarkers()
+        private void GenerateSideMarkers()
         {
             if (!_meshCollider)
             {
@@ -314,8 +322,8 @@ namespace Dice
                 foreach (List<Triangle> group in sideGroups)
                 {
                     Triangle firstTriangleFromGroup = group[0];
-                    float angle = Vector3.Angle(firstTriangleFromGroup.normal, checkedTriangle.normal);
-                    if (angle > AngleDegreesTolerance) continue;
+                    float dotResult = Vector3.Dot(firstTriangleFromGroup.normal, checkedTriangle.normal);
+                    if (dotResult < GenerateMarkersDotTolerance) continue;
                 
                     group.Add(checkedTriangle);
                     added = true;
@@ -368,14 +376,6 @@ namespace Dice
             }
 
             UpdateSides();
-        }
-
-        private void UpdateSides()
-        {
-            foreach (SideData side in sidesData)
-            {
-                side.Update();
-            }
         }
 
         private struct Triangle
