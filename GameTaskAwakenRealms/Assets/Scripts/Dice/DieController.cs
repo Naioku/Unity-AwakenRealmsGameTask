@@ -202,18 +202,6 @@ namespace Dice
             }
         }
 
-        private void RunDelayedAction(Action action, float delay)
-        {
-            StartCoroutine(Run());
-            return;
-            
-            IEnumerator Run()
-            {
-                yield return new WaitForSeconds(delay);
-                action.Invoke();
-            }
-        }
-
         private void RestoreRigidbodySettings()
         {
             Rigidbody.mass = _cacheMass;
