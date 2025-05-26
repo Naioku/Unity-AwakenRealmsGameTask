@@ -764,6 +764,11 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -266348237203662574, guid: 2e5576dd86a6bdf4daa5edc61ec1cee7,
+        type: 3}
+      propertyPath: gameManager.dragNDropController.draggingArea
+      value: 
+      objectReference: {fileID: 2146513555}
     - target: {fileID: 7052425853445299524, guid: 2e5576dd86a6bdf4daa5edc61ec1cee7,
         type: 3}
       propertyPath: m_Name
@@ -892,6 +897,12 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 012a97b0325405b4fb675984527203b3, type: 3}
+--- !u!4 &2146513555 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1236205204532516188, guid: 012a97b0325405b4fb675984527203b3,
+    type: 3}
+  m_PrefabInstance: {fileID: 1709278851}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

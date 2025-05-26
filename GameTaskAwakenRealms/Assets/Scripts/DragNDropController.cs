@@ -5,6 +5,7 @@ public class DragNDropController
 {
     [SerializeField] private float draggingHeight = 2f;
     [SerializeField] private GameObject draggingHandlePrefab;
+    [SerializeField] private Transform draggingArea;
 
     private Camera _mainCamera;
     private Plane _plane;
@@ -63,8 +64,15 @@ public class DragNDropController
     {
         Ray ray = _mainCamera.ScreenPointToRay(Managers.Instance.InputManager.CursorPosition);
         if (!_plane.Raycast(ray, out var distance)) return;
-     
-        _draggingHandle.position = ray.GetPoint(distance);
+        
+        Vector3 point = ray.GetPoint(distance);
+        float padding = 2f;
+        float halfScaleX = (draggingArea.lossyScale.x - padding) / 2f;
+        float halfScaleZ = (draggingArea.lossyScale.z - padding) / 2f;
+        point.x = Mathf.Clamp(point.x, draggingArea.position.x - halfScaleX, draggingArea.position.x + halfScaleX);
+        point.z = Mathf.Clamp(point.z, draggingArea.position.z - halfScaleZ, draggingArea.position.z + halfScaleZ);
+        
+        _draggingHandle.position = point;
     }
 
     private void HandleScoreCalculated(string score)
