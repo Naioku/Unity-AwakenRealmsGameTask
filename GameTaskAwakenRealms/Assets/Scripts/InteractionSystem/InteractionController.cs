@@ -12,7 +12,7 @@ namespace InteractionSystem
         [SerializeField] private LayerMask layerMask = 1 << 6;
         
         private Camera _mainCamera;
-        private readonly Dictionary<Enums.InteractionType, Dictionary<Enums.InteractionState, Action<MonoBehaviour, InteractionDataArgs>>> _interactionTypeLookup = new();
+        private Dictionary<Enums.InteractionType, Dictionary<Enums.InteractionState, Action<MonoBehaviour, InteractionDataArgs>>> _interactionTypeLookup = new();
         private InteractionInvoker _currentInteraction;
         private RaycastHit _currentHitInfo;
             
@@ -30,8 +30,11 @@ namespace InteractionSystem
             AddInput();
         }
 
-        public void Destroy()
+        public void Reset()
         {
+            _mainCamera = null;
+            _interactionTypeLookup = new Dictionary<Enums.InteractionType, Dictionary<Enums.InteractionState, Action<MonoBehaviour, InteractionDataArgs>>>();
+            _currentInteraction = null;
             StopInteracting();
             RemoveInput();
         }

@@ -10,17 +10,14 @@ namespace UISystem
         public event System.Action OnRoll;
         public void SetResult(string result) => uiController.Result = result;
         public void SetRollingActive(bool active) => uiController.SetRollingActive(active);
-
-        public void Awake()
+        public void StartGame() => uiController.OnRollButtonClicked += HandleRollButtonClicked;
+        public void StopGame()
         {
-            uiController.OnRollButtonClicked += HandleRollButtonClicked;
-        }
-
-        public void Destroy()
-        {
+            uiController.OnRollButtonClicked -= HandleRollButtonClicked;
             if (uiController)
             {
                 Object.Destroy(uiController.gameObject);
+                uiController = null;
             }
         }
 

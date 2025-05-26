@@ -32,18 +32,19 @@ public class Managers : MonoBehaviour
         _inputManager = new InputManager();
 
         _inputManager.Awake();
-        uiManager.Awake();
     }
 
     // Todo: Added only for easy testing.
     //  Eventually it should be invoked after signal of the game's start is received from the UI.
     private void Start() => gameManager.StartGame();
+    
+    // Todo: Added only for testing.
+    [ContextMenu("Stop Game")]
+    private void StopGame() => gameManager.StopGame();
 
     private void OnDestroy()
     {
-        gameManager.Destroy();
         _inputManager.Destroy();
-        uiManager.Destroy();
     }
 
     private void Update() => _updateManager.Update();

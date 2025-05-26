@@ -1,4 +1,4 @@
-﻿public class Enums
+﻿public abstract class Enums
 {
     #region InteractionSystem
 
@@ -18,7 +18,9 @@
     }
 
     #endregion
-    
+
+    #region Dice
+
     public enum DieState
     {
         Idle,
@@ -28,4 +30,6 @@
         PutDown,
         ScoreDetection,
     }
+
+    #endregion
 }
