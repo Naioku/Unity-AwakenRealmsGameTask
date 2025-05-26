@@ -16,6 +16,7 @@ namespace Dice
             public StateMachine(DieController dieController)
             {
                 _dieController = dieController;
+                Managers.Instance.UpdateRegistrar.RegisterOnUpdate(Tick);
             }
 
             public StateBase StateIdle { get; } = new StateIdle();
@@ -40,24 +41,22 @@ namespace Dice
             {
                 currentState?.Exit();
                 currentState = newState;
+                if (currentState == null) return;
+                
                 _dieController.OnStateChanged?.Invoke(currentState.EnumValue);
-                if (currentState == null)
-                {
-                    Managers.Instance.UpdateRegistrar.UnregisterFromUpdate(Tick);
-                }
-                else
-                {
-                    currentState.Initialize(this);
-                    currentState.Enter();
-                    Managers.Instance.UpdateRegistrar.RegisterOnUpdate(Tick);
-                }
+                currentState.Initialize(this);
+                currentState.Enter();
             }
 
-            public void Destroy() => currentState.Destroy();
-            
+            public void Destroy()
+            {
+                currentState.Destroy();
+                Managers.Instance.UpdateRegistrar.UnregisterFromUpdate(Tick);
+            }
+
             private void Tick()
             {
-                currentState.Tick();
+                currentState?.Tick();
             }
         }
     }
