@@ -60,8 +60,8 @@ namespace Dice
         private float _cacheMass;
         private float _cacheDrag;
         private float _cacheAngularDrag;
-        
         private Enums.DieState _currentState;
+        private Guid _delayedActionSwitchStateThrow;
         
         public event Action<Enums.DieState> OnStateChanged;
         public event Action<int> OnScoreDetected;
@@ -99,6 +99,8 @@ namespace Dice
         }
 
         private void Start() => SwitchState(Enums.DieState.PutDown);
+
+        private void OnDestroy() => Managers.Instance.TimerManager.CancelDelayedAction(_delayedActionSwitchStateThrow);
 
         private void InitInteraction()
         {
@@ -156,7 +158,7 @@ namespace Dice
                     
                     Rigidbody.AddForce(randomForce * statesData.autoThrow.throwForce, ForceMode.Impulse);
                     Rigidbody.AddTorque(randomTorque * statesData.autoThrow.torqueForce, ForceMode.Impulse);
-                    RunDelayedAction(() => SwitchState(Enums.DieState.Throw), 0.5f);
+                    _delayedActionSwitchStateThrow = Managers.Instance.TimerManager.RunDelayedAction(() => SwitchState(Enums.DieState.Throw), 0.5f);
                     break;
                 
                 case Enums.DieState.Throw:

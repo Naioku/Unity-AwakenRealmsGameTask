@@ -1,4 +1,5 @@
 ﻿using InputSystemExtension;
+using Timer;
 using UISystem;
 using UnityEngine;
 using UpdateSystem;
@@ -10,11 +11,13 @@ public class Managers : MonoBehaviour
     
     private UpdateManager _updateManager;
     private InputManager _inputManager;
+    private TimerManager _timerManager;
     
     public static Managers Instance { get; private set; }
+    public IUIManager UIManager => uiManager;
     public IUpdateRegistrar UpdateRegistrar => _updateManager;
     public IInputManager InputManager => _inputManager;
-    public IUIManager UIManager => uiManager;
+    public ITimerManager TimerManager => _timerManager;
     
     private void Awake()
     {
@@ -30,8 +33,10 @@ public class Managers : MonoBehaviour
         
         _updateManager = new UpdateManager();
         _inputManager = new InputManager();
+        _timerManager = new TimerManager();
 
         _inputManager.Awake();
+        _timerManager.Awake();
     }
 
     // Todo: Added only for easy testing.
