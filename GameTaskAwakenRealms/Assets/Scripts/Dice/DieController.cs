@@ -249,8 +249,12 @@ namespace Dice
         {
             if (!_meshCollider)
             {
-                Debug.LogError("No mesh collider set.");
-                return;
+                _meshCollider = GetComponent<MeshCollider>();
+                if (!_meshCollider)
+                {
+                    Debug.LogError("No mesh collider. Add one to this GameObject and try again.");
+                    return;
+                }
             }
 
             if (!_meshCollider.sharedMesh)
