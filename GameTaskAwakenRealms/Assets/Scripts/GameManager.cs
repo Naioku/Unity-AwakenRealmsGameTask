@@ -8,7 +8,7 @@ public class GameManager
 {
     [SerializeField] private InteractionController interactionController;
     [SerializeField] private DragNDropController dragNDropController;
-    [SerializeField] private DieController selectedDie;
+    [SerializeField] private DieController selectedDie; // Todo: SpawnManager.
     
     private int _scoreLast;
     private int _scoreTotal;

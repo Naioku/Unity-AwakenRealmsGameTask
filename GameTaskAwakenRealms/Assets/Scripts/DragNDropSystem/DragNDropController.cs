@@ -12,7 +12,7 @@ namespace DragNDropSystem
         private Camera _mainCamera;
         private Plane _plane;
     
-        private Transform _draggingHandle;
+        private Transform _draggingHandle; // Todo: SpawnManager.
         private SpringJoint _draggingHandleSpringJoint;
         private IDraggable _draggingObject;
     

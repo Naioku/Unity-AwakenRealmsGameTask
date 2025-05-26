@@ -5,7 +5,7 @@ namespace UISystem
     [System.Serializable]
     public class UIManager : IUIManager
     {
-        [SerializeField] private UIController uiController;
+        [SerializeField] private UIController uiController; // Todo: SpawnManager.
         
         public event System.Action OnRoll;
         public void SetResult(string result) => uiController.Result = result;
