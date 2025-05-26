@@ -7,11 +7,11 @@ namespace Dice
     {
         [SerializeField] private TextMeshPro number;
 
-        public string Number
+        public int Number
         {
             set
             {
-                number.text = value;
+                number.text = value.ToString();
                 name = name.Split("_")[0] + $"_{value}";
             }
         }

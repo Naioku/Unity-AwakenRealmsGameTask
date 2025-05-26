@@ -5,5 +5,5 @@ public interface IDraggable
 {
     public Rigidbody Rigidbody { get; }
     public void Drag();
-    public void Drop(Action<string> onScoreCalculated);
+    public void Drop();
 }

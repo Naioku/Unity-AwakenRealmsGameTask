@@ -54,7 +54,7 @@ public class DragNDropController
         
         Managers.Instance.UpdateRegistrar.UnregisterFromUpdate(MoveDraggedObject);
         _draggingHandleSpringJoint.connectedBody = null;
-        _draggingObject.Drop(HandleScoreCalculated);
+        _draggingObject.Drop();
         _draggingObject = null;
         _draggingHandle.gameObject.SetActive(false);
         _isDragging = false;
@@ -73,10 +73,5 @@ public class DragNDropController
         point.z = Mathf.Clamp(point.z, draggingArea.position.z - halfScaleZ, draggingArea.position.z + halfScaleZ);
         
         _draggingHandle.position = point;
-    }
-
-    private void HandleScoreCalculated(string score)
-    {
-        Debug.Log(score);
     }
 }

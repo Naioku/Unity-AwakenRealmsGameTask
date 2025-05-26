@@ -59,19 +59,25 @@ namespace Dice
         private float _cacheDrag;
         private float _cacheAngularDrag;
         
-        private State _currentState;
-        private Action<string> _onScoreCalculated;
+        private Enums.DieState _currentState;
+        
+        public event Action<Enums.DieState> OnStateChanged;
+        public event Action<int> OnScoreDetected;
 
         public Rigidbody Rigidbody => _rigidbody;
-        public void Drag() => SwitchState(State.Drag);
-        public void Drop(Action<string> onScoreCalculated)
+        public void Drag() => SwitchState(Enums.DieState.Drag);
+        public void Drop()
         {
-            _onScoreCalculated = onScoreCalculated;
-            SwitchState(_rigidbody.velocity.magnitude > minThrowVelocity ? State.Throw : State.PutDown);
+            SwitchState(_rigidbody.velocity.magnitude > minThrowVelocity ? Enums.DieState.Throw : Enums.DieState.PutDown);
         }
         
-        public void PerformAutoThrow() => SwitchState(State.AutoThrow);
-        
+        public void PerformAutoThrow()
+        {
+            if (_currentState != Enums.DieState.Idle) return;
+            
+            SwitchState(Enums.DieState.AutoThrow);
+        }
+
         private bool IsGrounded => Physics.Raycast(transform.position, Vector3.down, _meshCollider.bounds.extents.y + 0.1f, groundLayer);
 
         private void Awake()
@@ -89,7 +95,7 @@ namespace Dice
             InitInteraction();
         }
 
-        private void Start() => SwitchState(State.PutDown);
+        private void Start() => SwitchState(Enums.DieState.PutDown);
 
         private void InitInteraction()
         {
@@ -109,17 +115,19 @@ namespace Dice
         private void HandleHoverEnter(InteractionDataArgs obj) => _meshRenderer.material.color = _meshColorHighlight;
         private void HandleHoverExit(InteractionDataArgs obj) => _meshRenderer.material.color = _meshColorBase;
 
-        private void SwitchState(State newState)
+        private void SwitchState(Enums.DieState newState)
         {
+            _currentState = newState;
+            OnStateChanged?.Invoke(_currentState);
             switch (newState)
             {
-                case State.Idle:
+                case Enums.DieState.Idle:
                     Debug.Log("Idle");
                     _rigidbody.isKinematic = true;
                     interaction.Enabled = true;
                     break;
                 
-                case State.Drag:
+                case Enums.DieState.Drag:
                     Debug.Log("Drag");
                     interaction.Enabled = false;
                     _rigidbody.isKinematic = false;
@@ -128,7 +136,7 @@ namespace Dice
                     _rigidbody.angularDrag = statesData.drag.angularDrag;
                     break;
                 
-                case State.AutoThrow:
+                case Enums.DieState.AutoThrow:
                     Debug.Log("Auto throw");
                     interaction.Enabled = false;
                     _rigidbody.isKinematic = false;
@@ -145,16 +153,16 @@ namespace Dice
                     
                     _rigidbody.AddForce(randomForce * statesData.autoThrow.throwForce, ForceMode.Impulse);
                     _rigidbody.AddTorque(randomTorque * statesData.autoThrow.torqueForce, ForceMode.Impulse);
-                    RunDelayedAction(() => SwitchState(State.Throw), 0.5f);
+                    RunDelayedAction(() => SwitchState(Enums.DieState.Throw), 0.5f);
                     break;
                 
-                case State.Throw:
+                case Enums.DieState.Throw:
                     Debug.Log("Throw");
                     RestoreRigidbodySettings();
                     Managers.Instance.UpdateRegistrar.RegisterOnFixedUpdate(TrySwitchingStateToScoreDetection);
                     break;
                 
-                case State.PutDown:
+                case Enums.DieState.PutDown:
                     Debug.Log("Put down");
                     interaction.Enabled = false;
                     _rigidbody.velocity = Vector3.zero;
@@ -162,7 +170,7 @@ namespace Dice
                     Managers.Instance.UpdateRegistrar.RegisterOnFixedUpdate(TrySwitchingStateToIdle);
                     break;
                 
-                case State.ScoreDetection:
+                case Enums.DieState.ScoreDetection:
                     Debug.Log("Score calculation");
                     SideData? result = null;
                     foreach (SideData sideData in sidesData)
@@ -177,13 +185,12 @@ namespace Dice
                     
                     if (result == null)
                     {
-                        SwitchState(State.AutoThrow);
+                        SwitchState(Enums.DieState.AutoThrow);
                         break;
                     }
                     
-                    _onScoreCalculated.Invoke(result.Value.Number);
-                    _onScoreCalculated = null;
-                    SwitchState(State.Idle);
+                    OnScoreDetected?.Invoke(result.Value.Number);
+                    SwitchState(Enums.DieState.Idle);
                     break;
                 
                 default:
@@ -216,7 +223,7 @@ namespace Dice
             if (_rigidbody.velocity.magnitude > minRollingVelocity) return;
             
             Managers.Instance.UpdateRegistrar.UnregisterFromFixedUpdate(TrySwitchingStateToScoreDetection);
-            SwitchState(State.ScoreDetection);
+            SwitchState(Enums.DieState.ScoreDetection);
         }        
         
         private void TrySwitchingStateToIdle()
@@ -225,19 +232,9 @@ namespace Dice
             if (_rigidbody.velocity.magnitude > minRollingVelocity) return;
             
             Managers.Instance.UpdateRegistrar.UnregisterFromFixedUpdate(TrySwitchingStateToIdle);
-            SwitchState(State.Idle);
+            SwitchState(Enums.DieState.Idle);
         }
 
-        private enum State
-        {
-            Idle,
-            Drag,
-            AutoThrow,
-            Throw,
-            PutDown,
-            ScoreDetection,
-        }
-        
 #if UNITY_EDITOR
         private void OnValidate()
         {
@@ -360,7 +357,7 @@ namespace Dice
                 marker.name += $"_{sideIndex}";
                 marker.transform.position = averagePos;
                 marker.transform.rotation = Quaternion.LookRotation(averageNormal);
-                sidesData.Add(new SideData(marker.GetComponent<Side>(), $"{sideIndex}"));
+                sidesData.Add(new SideData(marker.GetComponent<Side>(), sideIndex));
                 sideIndex++;
             }
 
@@ -385,16 +382,16 @@ namespace Dice
         private struct SideData
         {
             [SerializeField] private Side side;
-            [SerializeField] private string number;
+            [SerializeField] private int number;
 
-            public SideData(Side side, string number)
+            public SideData(Side side, int number)
             {
                 this.side = side;
                 this.number = number;
             }
             
             public Vector3 ForwardVector => side.transform.forward;
-            public string Number => number;
+            public int Number => number;
         
             public void Update() => side.Number = number;
         }

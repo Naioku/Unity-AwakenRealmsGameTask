@@ -1,11 +1,12 @@
 ﻿using InputSystemExtension;
+using UISystem;
 using UnityEngine;
-using UnityEngine.Serialization;
 using UpdateSystem;
 
 public class Managers : MonoBehaviour
 {
     [SerializeField] private GameManager gameManager;
+    [SerializeField] private UIManager uiManager;
     
     private UpdateManager _updateManager;
     private InputManager _inputManager;
@@ -13,6 +14,7 @@ public class Managers : MonoBehaviour
     public static Managers Instance { get; private set; }
     public IUpdateRegistrar UpdateRegistrar => _updateManager;
     public IInputManager InputManager => _inputManager;
+    public IUIManager UIManager => uiManager;
     
     private void Awake()
     {
@@ -30,6 +32,7 @@ public class Managers : MonoBehaviour
         _inputManager = new InputManager();
 
         _inputManager.Awake();
+        uiManager.Awake();
     }
 
     // Todo: Added only for easy testing.
@@ -40,6 +43,7 @@ public class Managers : MonoBehaviour
     {
         gameManager.Destroy();
         _inputManager.Destroy();
+        uiManager.Destroy();
     }
 
     private void Update() => _updateManager.Update();
